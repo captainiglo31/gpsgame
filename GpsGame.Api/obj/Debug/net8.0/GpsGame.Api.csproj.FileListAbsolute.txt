@@ -139,3 +139,16 @@ C:\Users\pwack\RiderProjects\GpsGame\GpsGame.Api\bin\Debug\net8.0\tr\Microsoft.C
 C:\Users\pwack\RiderProjects\GpsGame\GpsGame.Api\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\pwack\RiderProjects\GpsGame\GpsGame.Api\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\pwack\RiderProjects\GpsGame\GpsGame.Api\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\FluentValidation.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.AspNetCore.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Enrichers.Environment.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Enrichers.Thread.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Extensions.Hosting.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Extensions.Logging.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Formatting.Compact.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Settings.Configuration.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Sinks.Console.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Sinks.Debug.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\bin\Debug\net8.0\Serilog.Sinks.File.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Api\obj\Debug\net8.0\GpsGame.Api.sourcelink.json

@@ -1,8 +1,23 @@
+using GpsGame.Api.Extensions;
 using GpsGame.Infrastructure; 
 using GpsGame.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Formatting.Json; // for structured JSON formatting
+using GpsGame.Infrastructure.Seed; // for DB migration and seed extension
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId()
+    .WriteTo.Console()   
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -14,7 +29,46 @@ builder.Services.AddHealthChecks();
 // DI Wirewing
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// CORS: unified policy for Unity dev origins
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowUnityDev", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:4200",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:4200"
+        )
+        .WithMethods("GET", "POST", "PUT", "DELETE")
+        .AllowAnyHeader();
+    });
+});
+
+// CORS: unify policy for Unity dev origins
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowUnityDev", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:4200",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:4200"
+        )
+        .WithMethods("GET", "POST", "PUT", "DELETE")
+        .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
+
+// Apply migrations and seed database if empty
+app.MigrateAndSeedAsync().GetAwaiter().GetResult();
 
 // Swagger nur in Dev (für MVP auch in Prod möglich, aber hier dev-first)
 if (app.Environment.IsDevelopment())
@@ -25,6 +79,9 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+// Enable CORS globally before endpoints
+app.UseCors("AllowUnityDev");
 
 var summaries = new[]
 {
@@ -70,6 +127,13 @@ app.MapPost("/players", async (AppDbContext db, string username, double lat, dou
     await db.SaveChangesAsync();
     return Results.Created($"/players/{p.Id}", p);
 });
+
+using (var scope = app.Services.CreateScope())
+{
+    var reader = scope.ServiceProvider.GetRequiredService<GpsGame.Application.FeatureFlags.IFeatureFlagReader>();
+    var all = await reader.GetAllAsync();
+    Log.Information("FeatureFlags loaded at startup: {@Flags}", all);
+}
 
 app.Run();
 

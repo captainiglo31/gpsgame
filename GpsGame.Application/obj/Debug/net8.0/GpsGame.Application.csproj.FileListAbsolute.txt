@@ -13,3 +13,4 @@ C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGam
 C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\refint\GpsGame.Application.dll
 C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.pdb
 C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\ref\GpsGame.Application.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.sourcelink.json

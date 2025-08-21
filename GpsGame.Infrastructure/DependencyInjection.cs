@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using GpsGame.Application.FeatureFlags;
+using GpsGame.Infrastructure.FeatureFlags;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +15,9 @@ public static class DependencyInjection
 
         services.AddDbContext<Persistence.AppDbContext>(opt =>
             opt.UseNpgsql(cs));
+        
+        // Feature flags (read-only)
+        services.AddScoped<IFeatureFlagReader, FeatureFlagReader>();
 
         return services;
     }

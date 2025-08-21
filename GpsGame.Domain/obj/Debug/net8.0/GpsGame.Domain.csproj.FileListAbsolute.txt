@@ -9,3 +9,4 @@ C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Domain\obj\Debug\net8.0\GpsGame.Dom
 C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Domain\obj\Debug\net8.0\refint\GpsGame.Domain.dll
 C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Domain\obj\Debug\net8.0\GpsGame.Domain.pdb
 C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Domain\obj\Debug\net8.0\ref\GpsGame.Domain.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Domain\obj\Debug\net8.0\GpsGame.Domain.sourcelink.json

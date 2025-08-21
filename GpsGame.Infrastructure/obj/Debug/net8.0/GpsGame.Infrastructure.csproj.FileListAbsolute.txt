@@ -17,3 +17,4 @@ C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Infrastructure\obj\Debug\net8.0\Gps
 C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Infrastructure\obj\Debug\net8.0\ref\GpsGame.Infrastructure.dll
 C:\Users\pwack\RiderProjects\GpsGame\GpsGame.Infrastructure\bin\Debug\net8.0\GpsGame.Infrastructure.runtimeconfig.json
 C:\Users\pwack\RiderProjects\GpsGame\GpsGame.Infrastructure\obj\Debug\net8.0\GpsGame.Infrastructure.genruntimeconfig.cache
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Infrastructure\obj\Debug\net8.0\GpsGame.Infrastructure.sourcelink.json
