@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: gpsgame-postgres
+    environment:
+      POSTGRES_USER: gps
+      POSTGRES_PASSWORD: gpspwd
+      POSTGRES_DB: gpsgame
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gps -d gpsgame"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  api:
+    build:
+      context: .
+      dockerfile: ./GpsGame.Api/Dockerfile
+    container_name: gpsgame-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Db: Host=postgres;Port=5432;Database=gpsgame;Username=gps;Password=gpspwd
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  pg_data:

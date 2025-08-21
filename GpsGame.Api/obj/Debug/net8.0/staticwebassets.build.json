@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "ttGUbYAkn4LqZniDa0Vy4sul+qlHuj27bh5oRdJOHIk=",
+  "Source": "GpsGame.Api",
+  "BasePath": "_content/GpsGame.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

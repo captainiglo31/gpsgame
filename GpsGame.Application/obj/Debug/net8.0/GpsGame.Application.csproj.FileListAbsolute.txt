@@ -1,0 +1,15 @@
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\bin\Debug\net8.0\GpsGame.Application.deps.json
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\bin\Debug\net8.0\GpsGame.Application.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\bin\Debug\net8.0\GpsGame.Application.pdb
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\bin\Debug\net8.0\GpsGame.Domain.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\bin\Debug\net8.0\GpsGame.Domain.pdb
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.csproj.AssemblyReference.cache
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.AssemblyInfoInputs.cache
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.AssemblyInfo.cs
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.csproj.CoreCompileInputs.cache
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame..1CEAE621.Up2Date
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\refint\GpsGame.Application.dll
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\GpsGame.Application.pdb
+C:\Users\pwack\RiderProjects\GPSGame\GpsGame.Application\obj\Debug\net8.0\ref\GpsGame.Application.dll
