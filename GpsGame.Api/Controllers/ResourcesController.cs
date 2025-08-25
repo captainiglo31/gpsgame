@@ -99,6 +99,7 @@ namespace GpsGame.Api.Controllers
                     _ => BadRequest(result)
                 };
             }
+            
 
             return Ok(result);
         }
