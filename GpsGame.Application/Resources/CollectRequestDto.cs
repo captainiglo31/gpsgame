@@ -2,8 +2,9 @@
 
 public sealed class CollectRequestDto
 {
-    public Guid PlayerId { get; set; }
+    public Guid PlayerId { get; set; }   
     public double PlayerLatitude { get; set; }
     public double PlayerLongitude { get; set; }
-    public int Amount { get; set; } // [1..50]
+    [Range(1, 50)]
+    public int Amount { get; set; }
 }

@@ -27,7 +27,7 @@ namespace GpsGame.Net.Models
     [Serializable]
     public sealed class CollectRequestDto
     {
-        public string playerId;      // wird ignoriert (Token), lassen wir leer
+        public string playerId;       
         public double playerLatitude;
         public double playerLongitude;
         public int amount;
@@ -41,11 +41,5 @@ namespace GpsGame.Net.Models
         public int collected;
         public int remaining;
         public string respawnAtUtc;  // optional/null → leere string
-    }
-
- 	[Serializable]
-    public sealed class CollectEnvelope
-    {
-        public CollectRequestDto request;
     }
 }

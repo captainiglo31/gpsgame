@@ -1,99 +1,151 @@
-// Assets/Scripts/GpsGame/Demo/GpsApiDemo.cs
+// Assets/Scripts/GpsGame/Net/GpsApiClient.cs
 using System;
-using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using GpsGame.Net;
-using GpsGame.Net.Models;
+using System.Globalization;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class GpsApiDemo : MonoBehaviour
+
+namespace GpsGame.Net
 {
-    [Header("API")]
-    [Tooltip("z.B. https://localhost:44306 (ohne Slash am Ende)")]
-    public string baseUrl = "https://localhost:44306";
-    [Tooltip("Token aus Server-Log (DbSeeder Ausgabe)")]
-    public string playerToken = "";
-     
-[Header("Auth")]
-		[Tooltip("Player Id (GUID) aus der Datenbank – NICHT der Token!")]
-		public string playerId = "";
-    
-    [Header("Player Position (Test)")]
-    public double playerLat = 51.5149;
-    public double playerLng = 6.3301;
-    public double bboxHalfSizeMeters = 200.0;
-
-    [Header("Collect")]
-    public int collectAmount = 5;
-
-    private GpsApiClient _api;
-
-    private void Awake()
+    /// <summary>
+    /// Minimaler HTTP-Client für die GpsGame-API.
+    /// - Setzt automatisch X-Player-Token auf alle Requests
+    /// - BBox-Fetch und Collect
+    /// - Parsen via JsonUtility (Wrapper bei Top-Level-Array)
+    /// </summary>
+    public sealed class GpsApiClient
     {
-        _api = new GpsApiClient(baseUrl, playerToken);
-    }
+		
 
-    private async void Start()
-    {
-        await FetchAndLogNodes();
-    }
 
-    private void Update()
-    {
-        // Drücke 'C' → versuche, den ersten Node in Reichweite zu sammeln
-        if (Input.GetKeyDown(KeyCode.C))
+        public string BaseUrl { get; }
+        public string PlayerToken { get; private set; }
+
+        public GpsApiClient(string baseUrl, string playerToken)
         {
-            _ = CollectNearestInRange();
+            BaseUrl = baseUrl.TrimEnd('/');
+            PlayerToken = playerToken ?? string.Empty;
         }
 
-        // Drücke 'R' → frisch laden
-        if (Input.GetKeyDown(KeyCode.R))
+        public void SetToken(string token) => PlayerToken = token ?? string.Empty;
+
+        // --- Resources: GET bounding box ---
+        public async Task<Models.ResourceNodeDto[]> GetResourcesAsync(double minLat, double minLng, double maxLat, double maxLng)
         {
-            _ = FetchAndLogNodes();
+            string F(double d) => d.ToString("F6", CultureInfo.InvariantCulture);
+
+            var url = $"{BaseUrl}/api/resources" +
+                      $"?minLat={F(minLat)}&minLng={F(minLng)}&maxLat={F(maxLat)}&maxLng={F(maxLng)}";
+
+            using var req = UnityWebRequest.Get(url);
+            AddCommonHeaders(req);
+            var res = await SendAsync(req);
+
+            if (!IsSuccess(res))
+            {
+                Debug.LogWarning($"[GpsApiClient] GET /resources failed: {res.responseCode} {res.error}");
+                return Array.Empty<Models.ResourceNodeDto>();
+            }
+
+            var json = res.downloadHandler.text ?? "[]";
+            var wrapped = "{\"items\":" + json + "}";
+            var list = JsonUtility.FromJson<Models.ResourceNodeList>(wrapped);
+            return list?.items ?? Array.Empty<Models.ResourceNodeDto>();
         }
+
+
+
+// --- Collect: POST /api/resources/{id}/collect ---
+public async Task<Models.CollectResultDto> CollectAsync(string nodeId, double playerLat, double playerLng, int amount, string playerId)
+{
+    var url = $"{BaseUrl}/api/resources/{nodeId}/collect";
+
+    // Server verlangt 1..50
+    amount = Math.Clamp(amount, 1, 50);
+
+    var payload = new Models.CollectRequestDto
+    {
+        playerId = playerId,          // WICHTIG: Guid als String
+        playerLatitude = playerLat,
+        playerLongitude = playerLng,
+        amount = amount
+    };
+
+    // <-- KEIN Envelope! Direkt das DTO senden.
+    var json = JsonUtility.ToJson(payload);
+    var body = Encoding.UTF8.GetBytes(json);
+
+    using var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
+    req.uploadHandler = new UploadHandlerRaw(body);
+    req.downloadHandler = new DownloadHandlerBuffer();
+    req.SetRequestHeader("Content-Type", "application/json");
+    req.SetRequestHeader("Accept", "application/json");
+    AddCommonHeaders(req);
+
+    var res = await SendAsync(req);
+
+    var status = res.responseCode;
+    var bodyText = res.downloadHandler != null ? res.downloadHandler.text : null;
+    Debug.Log($"[GpsApiClient] POST /collect → {status}, body: {bodyText}");
+
+    Models.CollectResultDto parsed = null;
+    if (!string.IsNullOrEmpty(bodyText))
+    {
+        try { parsed = JsonUtility.FromJson<Models.CollectResultDto>(bodyText); }
+        catch (Exception e) { Debug.LogWarning($"[GpsApiClient] Collect: JSON parse failed: {e.Message}"); }
     }
 
-    private async Task FetchAndLogNodes()
+    if (parsed != null)
     {
-        var bbox = BBoxFromCenter(playerLat, playerLng, bboxHalfSizeMeters);
-        var nodes = await _api.GetResourcesAsync(bbox.minLat, bbox.minLng, bbox.maxLat, bbox.maxLng);
-
-        Debug.Log($"[Demo] Loaded {nodes.Length} nodes in bbox.");
-        foreach (var n in nodes)
-            Debug.Log($"- {n.type} #{n.id} @({n.latitude:F5},{n.longitude:F5}) amt={n.amount} respawn={n.respawnAtUtc}");
+        if (string.IsNullOrWhiteSpace(parsed.reason))
+        {
+            parsed.reason = status switch
+            {
+                400 => "bad_request",
+                401 => "unauthorized",
+                404 => "not_found",
+                429 => "cooldown",
+                _   => "error"
+            };
+        }
+        return parsed;
     }
 
-    private async Task CollectNearestInRange()
+
+    return new Models.CollectResultDto
     {
-        var bbox = BBoxFromCenter(playerLat, playerLng, bboxHalfSizeMeters);
-        var nodes = await _api.GetResourcesAsync(bbox.minLat, bbox.minLng, bbox.maxLat, bbox.maxLng);
-        if (nodes.Length == 0)
+        success = false,
+        reason = status switch
         {
-            Debug.LogWarning("[Demo] Keine Nodes in der Nähe.");
-            return;
+            400 => "bad_request",
+            401 => "unauthorized",
+            404 => "not_found",
+            429 => "cooldown",
+            _   => "error"
+        }
+    };
+}
+
+
+
+        // --- Helpers ---
+        private void AddCommonHeaders(UnityWebRequest req)
+        {
+            if (!string.IsNullOrEmpty(PlayerToken))
+                req.SetRequestHeader("X-Player-Token", PlayerToken);
         }
 
-        // Simplest: nimm den ersten Node (du kannst gerne Distanz sortieren)
-        var node = nodes.First();
-        var amount = Mathf.Clamp(collectAmount, 1, 50);
-        var res = await _api.CollectAsync(node.id, playerLat, playerLng, amount, playerId);
+        private static bool IsSuccess(UnityWebRequest req)
+            => req.result == UnityWebRequest.Result.Success && req.responseCode is >= 200 and < 300;
 
-        if (res.success)
+        private static Task<UnityWebRequest> SendAsync(UnityWebRequest req)
         {
-            Debug.Log($"[Demo] Collect OK: +{res.collected}, remaining={res.remaining}, respawn={res.respawnAtUtc}");
+            var tcs = new TaskCompletionSource<UnityWebRequest>();
+            var op = req.SendWebRequest();
+            op.completed += _ => tcs.TrySetResult(req);
+            return tcs.Task;
         }
-        else
-        {
-            Debug.LogWarning($"[Demo] Collect FAIL: reason={res.reason}");
-        }
-    }
-
-    // --- Hilfen ---
-    private static (double minLat, double minLng, double maxLat, double maxLng) BBoxFromCenter(double lat, double lng, double halfSizeMeters)
-    {
-        // sehr grob: 1° lat ≈ 111_000 m; 1° lon ≈ 111_000 * cos(lat)
-        var dLat = halfSizeMeters / 111_000.0;
-        var dLng = halfSizeMeters / (111_000.0 * Math.Max(0.1, Math.Cos(lat * Math.PI / 180.0)));
-        return (lat - dLat, lng - dLng, lat + dLat, lng + dLng);
     }
 }
