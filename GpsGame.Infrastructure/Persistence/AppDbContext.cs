@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Player> Players => Set<Player>();
     public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
+    public DbSet<ResourceNode> ResourceNodes => Set<ResourceNode>();
+    public DbSet<PlayerResourceCollect> PlayerResourceCollects => Set<PlayerResourceCollect>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

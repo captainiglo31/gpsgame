@@ -1,0 +1,4 @@
+repository "GpsGame.Client/GpsGame.Client@9072167345165@cloud"
+  path "/"
+    br "/main"
+    co "/main"

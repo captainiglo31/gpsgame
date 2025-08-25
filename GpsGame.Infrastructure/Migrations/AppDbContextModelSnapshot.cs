@@ -56,6 +56,10 @@ namespace GpsGame.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ApiToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -67,13 +71,84 @@ namespace GpsGame.Infrastructure.Migrations
                         .HasPrecision(9, 6)
                         .HasColumnType("double precision");
 
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Players");
+                    b.HasIndex("ApiToken")
+                        .IsUnique();
+
+                    b.ToTable("Players", (string)null);
+                });
+
+            modelBuilder.Entity("GpsGame.Domain.Entities.PlayerResourceCollect", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ResourceNodeId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId", "ResourceNodeId", "CreatedUtc")
+                        .HasDatabaseName("IX_Collect_Player_Node_CreatedUtc");
+
+                    b.ToTable("PlayerResourceCollect", (string)null);
+                });
+
+            modelBuilder.Entity("GpsGame.Domain.Entities.ResourceNode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("Latitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("MaxAmount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("RespawnAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Latitude", "Longitude");
+
+                    b.ToTable("ResourceNodes", (string)null);
                 });
 #pragma warning restore 612, 618
         }

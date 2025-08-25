@@ -5,6 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Formatting.Json; // for structured JSON formatting
 using GpsGame.Infrastructure.Seed; // for DB migration and seed extension
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using GpsGame.Application.Resources;
+using GpsGame.Infrastructure.Services;
+using GpsGame.Api.Auth;
+using GpsGame.Application.Security;
+using Microsoft.AspNetCore.Authentication;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +29,32 @@ builder.Host.UseSerilog();
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// MVC Controllers
+builder.Services.AddControllers();
+builder.Services.AddValidatorsFromAssemblyContaining<GpsGame.Application.Players.PlayerCreateDto>();
+
+// Services
+builder.Services.AddScoped<IResourceCollector, ResourceCollector>();
+builder.Services.AddScoped<IResourceRules, ResourceRules>();
+
+// Auth
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentPlayerAccessor, CurrentPlayerAccessor>();
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = PlayerTokenAuthenticationHandler.Scheme;
+        options.DefaultChallengeScheme = PlayerTokenAuthenticationHandler.Scheme;
+    })
+    .AddScheme<AuthenticationSchemeOptions, PlayerTokenAuthenticationHandler>(
+        PlayerTokenAuthenticationHandler.Scheme, _ => { });
+
+builder.Services.AddAuthorization();
+
+// Fluent Validation
+builder.Services.AddFluentValidationAutoValidation();
 
 // Health
 builder.Services.AddHealthChecks();
@@ -83,61 +116,49 @@ app.UseHttpsRedirection();
 // Enable CORS globally before endpoints
 app.UseCors("AllowUnityDev");
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/version", () => new { name = "GpsGame.Api", version = "0.1.0", framework = "net8.0" });
-app.MapHealthChecks("/healthz");
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-// Nach dem Build:
-app.MapGet("/players", async (AppDbContext db) =>
-    await db.Players
-        .OrderByDescending(p => p.CreatedUtc)
-        .Take(50)
-        .ToListAsync());
 
 
-app.MapPost("/players", async (AppDbContext db, string username, double lat, double lng) =>
-{
-    var p = new GpsGame.Domain.Entities.Player
-    {
-        Id = Guid.NewGuid(),
-        Username = username,
-        Latitude = lat,
-        Longitude = lng
-    };
-    db.Players.Add(p);
-    await db.SaveChangesAsync();
-    return Results.Created($"/players/{p.Id}", p);
-});
-
+// DB Seeder
 using (var scope = app.Services.CreateScope())
 {
-    var reader = scope.ServiceProvider.GetRequiredService<GpsGame.Application.FeatureFlags.IFeatureFlagReader>();
-    var all = await reader.GetAllAsync();
-    Log.Information("FeatureFlags loaded at startup: {@Flags}", all);
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        await DbSeeder.SeedAsync(db, CancellationToken.None);
+        logger.LogInformation("Database seeding completed.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Database seeding failed.");
+        throw;
+    }
+}
+
+
+// Auth
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Map controllers
+app.MapControllers();
+
+
+// Demo-Tokens beim Start ausgeben
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var demoTokens = db.Players
+        .AsNoTracking()
+        .Select(p => new { p.Username, p.ApiToken })
+        .ToList();
+
+    foreach (var dt in demoTokens)
+    {
+        logger.LogInformation("Demo player token: {Username} -> {Token}", dt.Username, dt.ApiToken);
+    }
 }
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

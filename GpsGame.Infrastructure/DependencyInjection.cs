@@ -18,6 +18,9 @@ public static class DependencyInjection
         
         // Feature flags (read-only)
         services.AddScoped<IFeatureFlagReader, FeatureFlagReader>();
+            
+            // Resource query
+            services.AddScoped<GpsGame.Application.Resources.IResourceQuery, GpsGame.Infrastructure.Resources.ResourceQuery>();
 
         return services;
     }
