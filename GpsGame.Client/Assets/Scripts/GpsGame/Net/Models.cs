@@ -1,0 +1,51 @@
+// Assets/Scripts/GpsGame/Net/Models.cs
+using System;
+using UnityEngine;
+
+namespace GpsGame.Net.Models
+{
+    // Wrapper für Array-Parsing (JsonUtility kann kein Top-Level-Array)
+    [Serializable]
+    public sealed class ResourceNodeList
+    {
+        public ResourceNodeDto[] items;
+    }
+
+    [Serializable]
+    public sealed class ResourceNodeDto
+    {
+        // Namen in camelCase → matchen die ASP.NET JSON-Defaults
+        public string id;            // GUID als String
+        public string type;
+        public double latitude;
+        public double longitude;
+        public int amount;
+        public int maxAmount;
+        public string respawnAtUtc;  // null → leere string, ggf. selbst parsen
+    }
+
+    [Serializable]
+    public sealed class CollectRequestDto
+    {
+        public string playerId;      // wird ignoriert (Token), lassen wir leer
+        public double playerLatitude;
+        public double playerLongitude;
+        public int amount;
+    }
+
+    [Serializable]
+    public sealed class CollectResultDto
+    {
+        public bool success;
+        public string reason;        // "cooldown","too_far","respawning","not_found","disabled","depleted_or_race","unauthorized",...
+        public int collected;
+        public int remaining;
+        public string respawnAtUtc;  // optional/null → leere string
+    }
+
+ 	[Serializable]
+    public sealed class CollectEnvelope
+    {
+        public CollectRequestDto request;
+    }
+}
