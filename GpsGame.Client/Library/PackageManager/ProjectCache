@@ -5,16 +5,16 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638917241496750586
-    m_Hash: 157800792
+      ticks: 638917508102614882
+    m_Hash: 3827948620
   m_LockFileStatus:
     m_FilePath: C:/Users/pwack/RiderProjects/GpsGame/GpsGame.Client/Packages/packages-lock.json
     m_PathExists: 1
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638917241496957546
-    m_Hash: 692622943
+      ticks: 638917508102614882
+    m_Hash: 2930057783
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
 m_LocalPackages:

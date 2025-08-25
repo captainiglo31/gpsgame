@@ -1,4 +1,6 @@
-﻿namespace GpsGame.Application.Resources;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace GpsGame.Application.Resources;
 
 public sealed class CollectRequestDto
 {
