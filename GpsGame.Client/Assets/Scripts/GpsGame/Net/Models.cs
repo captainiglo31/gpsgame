@@ -11,7 +11,7 @@ namespace GpsGame.Net.Models
         public ResourceNodeDto[] items;
     }
 
-    [Serializable]
+    [Serializable] // can be removed?
     public sealed class ResourceNodeDto
     {
         // Namen in camelCase → matchen die ASP.NET JSON-Defaults
