@@ -42,4 +42,16 @@ namespace GpsGame.Net.Models
         public int remaining;
         public string respawnAtUtc;  // optional/null → leere string
     }
+    
+    [Serializable]
+    public sealed class ResourceDto
+    {
+        public string id;           // Guid als string ist für JsonUtility am stressfreiesten
+        public double latitude;
+        public double longitude;
+        public int amount;
+        public int maxAmount;
+        public string type;
+        public string respawnAtUtc; // als string reicht (nicht nötig fürs Rendering)
+    }
 }
