@@ -8,21 +8,10 @@ namespace GpsGame.Net.Models
     [Serializable]
     public sealed class ResourceNodeList
     {
-        public ResourceNodeDto[] items;
+        public ResourceDto[] items;
     }
 
-    [Serializable] // can be removed?
-    public sealed class ResourceNodeDto
-    {
-        // Namen in camelCase → matchen die ASP.NET JSON-Defaults
-        public string id;            // GUID als String
-        public string type;
-        public double latitude;
-        public double longitude;
-        public int amount;
-        public int maxAmount;
-        public string respawnAtUtc;  // null → leere string, ggf. selbst parsen
-    }
+  
 
     [Serializable]
     public sealed class CollectRequestDto
