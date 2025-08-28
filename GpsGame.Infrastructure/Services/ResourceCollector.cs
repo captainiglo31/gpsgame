@@ -153,13 +153,15 @@ public sealed class ResourceCollector : IResourceCollector
 
        _logger.LogInformation("Collect success. player={PlayerId}, node={NodeId}, collected={Collected}, remaining={Remaining}, respawnAtUtc={RespawnAtUtc}",
            request.PlayerId, nodeId, effective, after.Amount, after.Amount == 0 ? after.RespawnAtUtc : null);
-
+       
         return new CollectResultDto
         {
             Success = true,
             Collected = effective,
             Remaining = after.Amount,
-            RespawnAtUtc = after.Amount == 0 ? after.RespawnAtUtc : null
+            RespawnAtUtc = after.Amount == 0 ? after.RespawnAtUtc : null,
+            PlayerId = new Guid(playerId.ToString()),
+            ResourceType = node.Type
         };
     }
 

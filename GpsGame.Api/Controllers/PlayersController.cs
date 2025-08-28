@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GpsGame.Application.Inventory;
 using GpsGame.Application.Players;
 using GpsGame.Domain.Entities;
 using GpsGame.Infrastructure.Persistence;
@@ -15,7 +16,12 @@ namespace GpsGame.Api.Controllers
     public sealed class PlayersController : ControllerBase
     {
         private readonly AppDbContext _db;
-        public PlayersController(AppDbContext db) => _db = db;
+        private readonly IInventoryService _inventory;
+        public PlayersController(AppDbContext db, IInventoryService inventory)  
+        {
+            _db = db;
+            _inventory = inventory;
+        }
 
         /// <summary>Create a new player.</summary>
         [HttpPost]
@@ -65,6 +71,14 @@ namespace GpsGame.Api.Controllers
                 .ToListAsync(ct);
 
             return Ok(list);
+        }
+        
+        /// <summary>Aggregated inventory by ResourceType for a player.</summary>
+        [HttpGet("{id:guid}/inventory")]
+        public async Task<IActionResult> GetInventory(Guid id, CancellationToken ct)
+        {
+            var items = await _inventory.GetByPlayerAsync(id, ct);
+            return Ok(items.Select(x => new { ResourceType = x.ResourceType, Amount = x.Amount }));
         }
     }
 }

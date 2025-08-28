@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GpsGame.Application.FeatureFlags;
+using GpsGame.Application.Inventory;
 using GpsGame.Application.Resources;
+using GpsGame.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GpsGame.Api.Controllers
@@ -15,12 +17,17 @@ namespace GpsGame.Api.Controllers
         private readonly IResourceQuery _resourceQuery;
         private readonly IFeatureFlagReader _flags;
         private readonly IResourceCollector _collector;
+        private readonly AppDbContext _db;
+        private readonly IInventoryService _inventory;
+        
 
-        public ResourcesController(IResourceQuery resourceQuery, IFeatureFlagReader flags, IResourceCollector collector)
+        public ResourcesController(IResourceQuery resourceQuery, IFeatureFlagReader flags, IResourceCollector collector,  AppDbContext db, IInventoryService inventory)
         {
             _resourceQuery = resourceQuery;
             _flags = flags;
             _collector = collector;
+            _db = db;
+            _inventory = inventory;
         }
 
         /// <summary>
@@ -74,33 +81,42 @@ namespace GpsGame.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CollectAsync([FromRoute] Guid id, [FromBody] CollectRequestDto request, CancellationToken ct)
         {
-            // 404 if feature flag off (align with spec)
             if (!(await _flags.IsEnabledAsync("resources_enabled", ct) ?? false))
                 return NotFound();
-
-            // Model validation (FluentValidation handles details)
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
             var result = await _collector.CollectAsync(id, request, ct);
 
             if (!result.Success)
             {
-                // Map reasons to status codes per spec
+                await tx.RollbackAsync(ct);
                 return result.Reason switch
                 {
-                    "unauthorized"=> Unauthorized(),
-                    "disabled"    => NotFound(),
-                    "not_found"   => NotFound(),
-                    "respawning"  => BadRequest(result),
-                    "too_far"     => BadRequest(result),
-                    "depleted_or_race" => BadRequest(result),
-                    "cooldown"          => StatusCode(StatusCodes.Status429TooManyRequests, result),
-                    _ => BadRequest(result)
+                    "unauthorized"        => Unauthorized(),
+                    "disabled"            => NotFound(),
+                    "not_found"           => NotFound(),
+                    "respawning"          => BadRequest(result),
+                    "too_far"             => BadRequest(result),
+                    "depleted_or_race"    => BadRequest(result),
+                    "cooldown"            => StatusCode(StatusCodes.Status429TooManyRequests, result),
+                    _                     => BadRequest(result)
                 };
             }
 
+            // WICHTIG: result muss PlayerId, ResourceType, Collected liefern (siehe unten).
+            var amountToAdd = result.Collected;
+            if (amountToAdd > 0)
+                await _inventory.IncrementAsync(result.PlayerId, result.ResourceType, amountToAdd, ct);
+
+            // Node-Änderungen + Inventar sind im selben DbContext -> jetzt persistieren + committen
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+
             return Ok(result);
         }
+
     }
 }

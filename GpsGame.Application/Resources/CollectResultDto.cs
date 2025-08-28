@@ -7,4 +7,6 @@ public sealed class CollectResultDto
     public int Collected { get; init; }
     public int Remaining { get; init; }
     public DateTime? RespawnAtUtc { get; init; }
+    public Guid PlayerId { get; init; }
+    public string ResourceType { get; init; } = "";
 }

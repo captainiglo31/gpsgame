@@ -87,6 +87,34 @@ namespace GpsGame.Infrastructure.Migrations
                     b.ToTable("Players", (string)null);
                 });
 
+            modelBuilder.Entity("GpsGame.Domain.Entities.PlayerInventory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ResourceType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId", "ResourceType")
+                        .IsUnique();
+
+                    b.ToTable("PlayerInventory", (string)null);
+                });
+
             modelBuilder.Entity("GpsGame.Domain.Entities.PlayerResourceCollect", b =>
                 {
                     b.Property<Guid>("Id")
@@ -149,6 +177,17 @@ namespace GpsGame.Infrastructure.Migrations
                     b.HasIndex("Latitude", "Longitude");
 
                     b.ToTable("ResourceNodes", (string)null);
+                });
+
+            modelBuilder.Entity("GpsGame.Domain.Entities.PlayerInventory", b =>
+                {
+                    b.HasOne("GpsGame.Domain.Entities.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
                 });
 #pragma warning restore 612, 618
         }

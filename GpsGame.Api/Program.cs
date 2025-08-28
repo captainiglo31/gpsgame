@@ -10,6 +10,7 @@ using FluentValidation.AspNetCore;
 using GpsGame.Application.Resources;
 using GpsGame.Infrastructure.Services;
 using GpsGame.Api.Auth;
+using GpsGame.Application.Inventory;
 using GpsGame.Application.Security;
 using Microsoft.AspNetCore.Authentication;
 
@@ -37,6 +38,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<GpsGame.Application.Players
 // Services
 builder.Services.AddScoped<IResourceCollector, ResourceCollector>();
 builder.Services.AddScoped<IResourceRules, ResourceRules>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 
 // Auth
 builder.Services.AddHttpContextAccessor();
@@ -99,6 +101,12 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+//using (var scope = app.Services.CreateScope())
+//{
+    //var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    //db.Database.Migrate(); // wendet fehlende Migrationen an
+//}
 
 // Apply migrations and seed database if empty
 app.MigrateAndSeedAsync().GetAwaiter().GetResult();
