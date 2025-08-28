@@ -1,4 +1,6 @@
-﻿namespace GpsGame.Application.Resources;
+﻿using GpsGame.Application.DTOs;
+
+namespace GpsGame.Application.Resources;
 
 public sealed class CollectResultDto
 {
@@ -9,4 +11,11 @@ public sealed class CollectResultDto
     public DateTime? RespawnAtUtc { get; init; }
     public Guid PlayerId { get; init; }
     public string ResourceType { get; init; } = "";
+    
+    /// <summary>The node that was collected (if success).</summary>
+    public Guid? CollectedNodeId { get; init; }
+
+    /// <summary>Aggregated inventory after collection (if success).</summary>
+    public List<InventoryItemDto>? Inventory { get; init; }
+    
 }

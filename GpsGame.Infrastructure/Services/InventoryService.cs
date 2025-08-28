@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GpsGame.Application.DTOs;
 using GpsGame.Application.Inventory;
 using GpsGame.Domain.Entities;
 using GpsGame.Infrastructure.Persistence;
@@ -30,13 +31,14 @@ namespace GpsGame.Infrastructure.Services
                 await IncrementAsync(playerId, type, amount, ct);
         }
 
-        public async Task IncrementAsync(Guid playerId, string resourceType, long delta, CancellationToken ct = default)
+        public async Task IncrementAsync(Guid playerId, string resourceType, long amount, CancellationToken ct = default)
         {
             var now = DateTime.UtcNow;
+            var type = NormalizeType(resourceType);
 
             // Try tracked entity first (fast path inside same DbContext scope)
             var current = await _db.Set<PlayerInventory>()
-                                   .FirstOrDefaultAsync(x => x.PlayerId == playerId && x.ResourceType == resourceType, ct);
+                                   .FirstOrDefaultAsync(x => x.PlayerId == playerId && x.ResourceType == type, ct);
 
             if (current is null)
             {
@@ -46,7 +48,7 @@ namespace GpsGame.Infrastructure.Services
                     Id = Guid.NewGuid(),
                     PlayerId = playerId,
                     ResourceType = resourceType,
-                    Amount = delta,
+                    Amount = amount,
                     UpdatedAt = now
                 };
 
@@ -69,7 +71,7 @@ namespace GpsGame.Infrastructure.Services
             // update existing
             if (current is not null)
             {
-                current.Amount += delta;
+                current.Amount += amount;
                 current.UpdatedAt = now;
                 _db.Update(current);
                 await _db.SaveChangesAsync(ct);
@@ -86,5 +88,27 @@ namespace GpsGame.Infrastructure.Services
 
             return data.Select(x => (x.Key, x.Sum)).ToList();
         }
+        
+        /// <inheritdoc />
+        public async Task<IReadOnlyList<InventoryItemDto>> GetAggregatedByPlayerAsync(Guid playerId, CancellationToken ct)
+        {
+            // Groups inventory rows by ResourceType and sums Amount.
+            var data = await _db.PlayerInventory
+                .AsNoTracking()
+                .Where(x => x.PlayerId == playerId)
+                .GroupBy(x => x.ResourceType)
+                .Select(g => new InventoryItemDto
+                {
+                    ResourceType = g.Key,
+                    Amount = g.Sum(x => x.Amount)
+                })
+                .ToListAsync(ct);
+
+            return data;
+        }
+        
+        private static string NormalizeType(string resourceType)
+            => resourceType?.Trim().ToUpperInvariant() ?? string.Empty;
+
     }
 }

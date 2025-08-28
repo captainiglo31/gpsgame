@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GpsGame.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a707489a060dab1be68d29880afe2da9aee1c9f1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e373e3cdd8582d6581b7bd49cc454161eccd7e99")]
 [assembly: System.Reflection.AssemblyProductAttribute("GpsGame.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GpsGame.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

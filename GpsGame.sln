@@ -11,6 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GpsGame.Application", "GpsG
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GpsGame.Infrastructure", "GpsGame.Infrastructure\GpsGame.Infrastructure.csproj", "{8EAC527F-A832-4FDE-AE28-EFD105ED9941}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GpsGame.Tests", "GpsGame.Tests\GpsGame.Tests.csproj", "{F92A8EC4-F2D2-47AA-902C-A7819D4DF274}"
+EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +72,8 @@ Global
 		{8EAC527F-A832-4FDE-AE28-EFD105ED9941}.Release|x64.Build.0 = Release|Any CPU
 		{8EAC527F-A832-4FDE-AE28-EFD105ED9941}.Release|x86.ActiveCfg = Release|Any CPU
 		{8EAC527F-A832-4FDE-AE28-EFD105ED9941}.Release|x86.Build.0 = Release|Any CPU
+		{F92A8EC4-F2D2-47AA-902C-A7819D4DF274}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F92A8EC4-F2D2-47AA-902C-A7819D4DF274}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

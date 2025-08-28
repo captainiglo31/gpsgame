@@ -77,8 +77,8 @@ namespace GpsGame.Api.Controllers
         [HttpGet("{id:guid}/inventory")]
         public async Task<IActionResult> GetInventory(Guid id, CancellationToken ct)
         {
-            var items = await _inventory.GetByPlayerAsync(id, ct);
-            return Ok(items.Select(x => new { ResourceType = x.ResourceType, Amount = x.Amount }));
+            var aggregated = await _inventory.GetAggregatedByPlayerAsync(id, ct);
+            return Ok(aggregated);
         }
     }
 }

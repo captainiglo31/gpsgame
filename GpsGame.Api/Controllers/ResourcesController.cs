@@ -93,6 +93,18 @@ namespace GpsGame.Api.Controllers
             if (!result.Success)
             {
                 await tx.RollbackAsync(ct);
+                
+                // schlanke Fehler-Payload vorbereiten
+                var errorPayload = new
+                {
+                    success = false,
+                    reason = result.Reason,             // e.g. "cooldown", "too_far"
+                    nodeId = result.CollectedNodeId,    // für UI: welchen Node betrifft es?
+                    remaining = result.Remaining,       // hilfreich, wenn Du Restmengen anzeigen willst
+                    respawnAtUtc = result.RespawnAtUtc
+                    // bewusst KEIN inventory, KEIN collectedNodeId, KEIN playerId nötig
+                };
+                
                 return result.Reason switch
                 {
                     "unauthorized"        => Unauthorized(),
@@ -101,8 +113,9 @@ namespace GpsGame.Api.Controllers
                     "respawning"          => BadRequest(result),
                     "too_far"             => BadRequest(result),
                     "depleted_or_race"    => BadRequest(result),
-                    "cooldown"            => StatusCode(StatusCodes.Status429TooManyRequests, result),
-                    _                     => BadRequest(result)
+                    "cooldown"            => StatusCode(StatusCodes.Status409Conflict, errorPayload),
+                    "already_collected"   => StatusCode(StatusCodes.Status409Conflict, errorPayload),
+                    _                     => BadRequest(errorPayload)
                 };
             }
 
@@ -115,7 +128,24 @@ namespace GpsGame.Api.Controllers
             await _db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
 
-            return Ok(result);
+            
+            // Nach Commit: Aggregiertes Inventar laden und in die Antwort packen
+            var aggregated = await _inventory.GetAggregatedByPlayerAsync(result.PlayerId, ct);
+
+            var response = new CollectResultDto
+            {
+                Success = true,
+                Reason = null,
+                Collected = result.Collected,
+                Remaining = result.Remaining,
+                RespawnAtUtc = result.RespawnAtUtc,
+                PlayerId = result.PlayerId,
+                ResourceType = result.ResourceType,
+                CollectedNodeId = result.CollectedNodeId,
+                Inventory = aggregated.ToList()
+            };
+
+            return Ok(response);
         }
 
     }

@@ -1,0 +1,6 @@
+{
+  "GpsGame.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\pwack\\RiderProjects\\GPSGame\\GpsGame.Api",
+  "GpsGame.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\pwack\\RiderProjects\\GPSGame\\GpsGame.Application",
+  "GpsGame.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\pwack\\RiderProjects\\GPSGame\\GpsGame.Domain",
+  "GpsGame.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "C:\\Users\\pwack\\RiderProjects\\GPSGame\\GpsGame.Infrastructure"
+}

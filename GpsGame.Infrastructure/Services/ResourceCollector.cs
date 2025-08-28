@@ -80,7 +80,10 @@ public sealed class ResourceCollector : IResourceCollector
            return new CollectResultDto
            {
                Success = false, Reason = "cooldown",
-               Remaining = node.Amount, RespawnAtUtc = node.RespawnAtUtc
+               Remaining = node.Amount, RespawnAtUtc = node.RespawnAtUtc,
+               PlayerId = request.PlayerId,                 
+               ResourceType = node.Type,
+               CollectedNodeId = node.Id
            };
        }
        
@@ -99,7 +102,16 @@ public sealed class ResourceCollector : IResourceCollector
         {
            _logger.LogWarning("Collect blocked: respawning. player={PlayerId}, node={NodeId}, respawnAtUtc={RespawnAtUtc}, amount={Amount}",
                request.PlayerId, nodeId, node.RespawnAtUtc, node.Amount);
-            return new CollectResultDto { Success = false, Reason = "respawning", Remaining = node.Amount, RespawnAtUtc = node.RespawnAtUtc };
+            return new CollectResultDto
+            {
+                Success = false, 
+                Reason = "respawning", 
+                Remaining = node.Amount, 
+                RespawnAtUtc = node.RespawnAtUtc, 
+                PlayerId = new Guid(playerId.ToString()), 
+                ResourceType = node.Type,
+                CollectedNodeId = node.Id,
+            };
         }
 
         // Distance check
@@ -116,7 +128,15 @@ public sealed class ResourceCollector : IResourceCollector
         {
            _logger.LogWarning("Collect failed: depleted or race (pre-check). player={PlayerId}, node={NodeId}, nodeAmount={Amount}",
                request.PlayerId, nodeId, node.Amount);
-            return new CollectResultDto { Success = false, Reason = "depleted_or_race", Remaining = node.Amount };
+            return new CollectResultDto
+            {
+                Success = false, 
+                Reason = "depleted_or_race", 
+                Remaining = node.Amount, 
+                PlayerId = new Guid(playerId.ToString()), 
+                ResourceType = node.Type,
+                CollectedNodeId = node.Id
+            };
         }
 
         var rows = await _db.ResourceNodes
@@ -161,7 +181,10 @@ public sealed class ResourceCollector : IResourceCollector
             Remaining = after.Amount,
             RespawnAtUtc = after.Amount == 0 ? after.RespawnAtUtc : null,
             PlayerId = new Guid(playerId.ToString()),
-            ResourceType = node.Type
+            ResourceType = node.Type,
+            CollectedNodeId = node.Id
+            
+            
         };
     }
 

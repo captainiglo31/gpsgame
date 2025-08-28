@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using GpsGame.Application.DTOs;
 
 namespace GpsGame.Application.Inventory
 {
@@ -13,5 +14,9 @@ namespace GpsGame.Application.Inventory
         Task AddRangeAsync(Guid playerId, IEnumerable<(string resourceType, long amount)> items, CancellationToken ct = default);
         Task IncrementAsync(Guid playerId, string resourceType, long delta, CancellationToken ct = default);
         Task<IReadOnlyList<(string ResourceType, long Amount)>> GetByPlayerAsync(Guid playerId, CancellationToken ct = default);
+        /// <summary>
+        /// Returns aggregated inventory for a player (grouped by resource type).
+        /// </summary>
+        Task<IReadOnlyList<InventoryItemDto>> GetAggregatedByPlayerAsync(Guid playerId, CancellationToken ct);
     }
 }
