@@ -192,6 +192,8 @@ namespace GpsGame.Net
             };
             req.SetRequestHeader("Content-Type", "application/json");
             req.SetRequestHeader("Accept", "application/json");
+            req.chunkedTransfer = false;                 // vermeidet Chunking-Resets
+            req.SetRequestHeader("Connection", "close"); // schließt Verbindung hart (hilft gegen Curl 56)
             AddCommonHeaders(req);
 
             var res = await SendAsync(req);
@@ -200,7 +202,7 @@ namespace GpsGame.Net
 
             var body = res.downloadHandler?.text ?? "{}";
             var player = JsonUtility.FromJson<PlayerDto>(body);
-            if (player == null || string.IsNullOrWhiteSpace(player.Id))
+            if (player == null || string.IsNullOrWhiteSpace(player.id))
                 throw new Exception("CreatePlayer: invalid response (no id).");
 
             return player;
