@@ -10,9 +10,6 @@ using GpsGame.Net.Models;
 
 namespace GpsGame.Net
 {
-    
-    
-    
     /// <summary>
     /// Minimaler HTTP-Client für die GpsGame-API.
     /// - Setzt automatisch X-Player-Token auf alle Requests
@@ -38,6 +35,10 @@ namespace GpsGame.Net
         }
 
         public void SetToken(string token) => PlayerToken = token ?? string.Empty;
+        
+        public string PlayerId { get; private set; }
+
+        public void SetPlayerId(string id) => PlayerId = id;
 
         public async Task<ResourceDto[]> GetResourcesAsync(double minLat, double minLng, double maxLat, double maxLng)
         {
@@ -133,6 +134,91 @@ namespace GpsGame.Net
                     _   => "error"
                 }
             };
+        }
+        
+        /// <summary>
+        /// Lädt das Inventar des aktuellen Spielers.
+        /// Standard-Route: /api/inventory
+        /// Falls deine API anders lautet (z. B. /api/players/{id}/inventory),
+        /// bitte unten den Pfad anpassen.
+        /// </summary>
+        public async Task<InventoryItemDto[]> GetInventoryAsync()
+        {
+            if (string.IsNullOrWhiteSpace(PlayerId))
+                throw new Exception("PlayerId not set. Call SetPlayerId(...) first.");
+
+            string url = $"{BaseUrl}/api/players/{PlayerId}/inventory";
+
+            using (var req = UnityWebRequest.Get(url))
+            {
+                // Player-Token wie bei deinen anderen Requests hinzufügen:
+                if (!string.IsNullOrEmpty(PlayerToken))
+                    req.SetRequestHeader("X-Player-Token", PlayerToken);
+
+                // Optional: JSON akzeptieren
+                req.SetRequestHeader("Accept", "application/json");
+
+                var op = req.SendWebRequest();
+                while (!op.isDone) await Task.Yield();
+
+#if UNITY_2020_2_OR_NEWER
+                if (req.result != UnityWebRequest.Result.Success)
+#else
+                if (req.isHttpError || req.isNetworkError)
+#endif
+                {
+                    Debug.LogError($"[API] Inventory GET failed: {req.responseCode} {req.error}\n{req.downloadHandler?.text}");
+                    throw new Exception($"Inventory request failed: {req.responseCode} {req.error}");
+                }
+
+                var raw = req.downloadHandler?.text ?? "[]";
+
+                // JsonUtility kann kein Top-Level-Array -> manuell wrappen:
+                string wrapped = "{\"items\":" + raw + "}";
+                InventoryListDto parsed = JsonUtility.FromJson<InventoryListDto>(wrapped);
+
+                return parsed?.items ?? Array.Empty<InventoryItemDto>();
+            }
+        }
+        
+        public async Task<PlayerDto> CreatePlayerAsync(PlayerCreateDto dto)
+        {
+            var url = $"{BaseUrl}/api/players";
+            var json = JsonUtility.ToJson(dto);
+            using var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST)
+            {
+                uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json)),
+                downloadHandler = new DownloadHandlerBuffer()
+            };
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.SetRequestHeader("Accept", "application/json");
+            AddCommonHeaders(req);
+
+            var res = await SendAsync(req);
+            if (!IsSuccess(res))
+                throw new Exception($"CreatePlayer failed: {res.responseCode} {res.error} {res.downloadHandler?.text}");
+
+            var body = res.downloadHandler?.text ?? "{}";
+            var player = JsonUtility.FromJson<PlayerDto>(body);
+            if (player == null || string.IsNullOrWhiteSpace(player.Id))
+                throw new Exception("CreatePlayer: invalid response (no id).");
+
+            return player;
+        }
+
+        public async Task<PlayerDto> GetPlayerByIdAsync(string id)
+        {
+            var url = $"{BaseUrl}/api/players/{id}";
+            using var req = UnityWebRequest.Get(url);
+            AddCommonHeaders(req);
+            req.SetRequestHeader("Accept", "application/json");
+
+            var res = await SendAsync(req);
+            if (!IsSuccess(res))
+                throw new Exception($"GetPlayer failed: {res.responseCode} {res.error} {res.downloadHandler?.text}");
+
+            var body = res.downloadHandler?.text ?? "{}";
+            return JsonUtility.FromJson<PlayerDto>(body);
         }
 
 
