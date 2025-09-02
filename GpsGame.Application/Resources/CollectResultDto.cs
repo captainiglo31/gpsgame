@@ -16,6 +16,6 @@ public sealed class CollectResultDto
     public Guid? CollectedNodeId { get; init; }
 
     /// <summary>Aggregated inventory after collection (if success).</summary>
-    public List<InventoryItemDto>? Inventory { get; init; }
+    public List<InventoryItemDto>? Inventory { get; set; }
     
 }

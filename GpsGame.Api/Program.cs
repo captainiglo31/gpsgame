@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GpsGame.Api.Extensions;
 using GpsGame.Infrastructure;
 using GpsGame.Infrastructure.Persistence;
@@ -28,7 +29,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // MVC + Validation
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
 builder.Services.AddValidatorsFromAssemblyContaining<GpsGame.Application.Players.PlayerCreateDto>();
 builder.Services.AddFluentValidationAutoValidation();
 
