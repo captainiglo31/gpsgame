@@ -174,6 +174,10 @@ namespace GpsGame.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RespawnAtUtc");
+
+                    b.HasIndex("Amount", "RespawnAtUtc");
+
                     b.HasIndex("Latitude", "Longitude");
 
                     b.ToTable("ResourceNodes", (string)null);

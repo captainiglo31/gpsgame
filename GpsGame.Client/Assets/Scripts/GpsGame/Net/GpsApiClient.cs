@@ -20,6 +20,14 @@ namespace GpsGame.Net
     {
         public string BaseUrl { get; }
         public string PlayerToken { get; private set; }
+        
+        
+        [Serializable]
+        private sealed class InventoryContainer
+        {
+            public InventoryItemDto[] items;
+        }
+        
         [Serializable]
         private sealed class ResourceArrayWrapper { public ResourceDto[] items; }
         // bypass https local
@@ -46,20 +54,25 @@ namespace GpsGame.Net
                 $"{BaseUrl}/api/resources?minLat={minLat.ToString(CultureInfo.InvariantCulture)}&minLng={minLng.ToString(CultureInfo.InvariantCulture)}&maxLat={maxLat.ToString(CultureInfo.InvariantCulture)}&maxLng={maxLng.ToString(CultureInfo.InvariantCulture)}";
 
             using var req = UnityWebRequest.Get(url);
-            req.SetRequestHeader("X-Player-Token", PlayerToken);
-
-            #if UNITY_EDITOR
+            // einheitliche Header + Stabilität
+            req.SetRequestHeader("Accept", "application/json");
+            req.SetRequestHeader("Connection", "close");
+            if (!string.IsNullOrEmpty(PlayerToken))
+                req.SetRequestHeader("X-Player-Token", PlayerToken);
+            req.chunkedTransfer = false;
+            req.timeout = 10;
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
             req.certificateHandler = new DevCertBypass();
             #endif
-            
+            Debug.Log($"[API] GET resources -> {url}");
+           
             var op = req.SendWebRequest();
             while (!op.isDone) await Task.Yield();
 
             if (req.result != UnityWebRequest.Result.Success)
-                throw new Exception($"HTTP {req.responseCode}: {req.error}");
+                throw new Exception($"HTTP {req.responseCode}: {req.error} - {req.downloadHandler?.text}");
 
             var json = req.downloadHandler.text;
-            Debug.Log($"[API] GET resources -> {url}\nJSON: {json}");
 
             // Top-Level-Array via Wrapper für JsonUtility
             var wrapped = $"{{\"items\":{json}}}";
@@ -135,7 +148,7 @@ namespace GpsGame.Net
                 }
             };
         }
-        
+       
         /// <summary>
         /// Lädt das Inventar des aktuellen Spielers.
         /// Standard-Route: /api/inventory
@@ -151,33 +164,44 @@ namespace GpsGame.Net
 
             using (var req = UnityWebRequest.Get(url))
             {
-                // Player-Token wie bei deinen anderen Requests hinzufügen:
-                if (!string.IsNullOrEmpty(PlayerToken))
-                    req.SetRequestHeader("X-Player-Token", PlayerToken);
-
-                // Optional: JSON akzeptieren
                 req.SetRequestHeader("Accept", "application/json");
+                req.SetRequestHeader("X-Player-Token", PlayerToken ?? string.Empty);
+                req.SetRequestHeader("Connection", "close"); // Stabilität im Editor
+                req.chunkedTransfer = false;
+                req.timeout = 10; // Sekunden (gegen ewiges Hängen)
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                req.certificateHandler = new DevCertBypass();
+#endif
 
                 var op = req.SendWebRequest();
                 while (!op.isDone) await Task.Yield();
 
-#if UNITY_2020_2_OR_NEWER
                 if (req.result != UnityWebRequest.Result.Success)
-#else
-                if (req.isHttpError || req.isNetworkError)
-#endif
                 {
                     Debug.LogError($"[API] Inventory GET failed: {req.responseCode} {req.error}\n{req.downloadHandler?.text}");
                     throw new Exception($"Inventory request failed: {req.responseCode} {req.error}");
                 }
 
-                var raw = req.downloadHandler?.text ?? "[]";
-
-                // JsonUtility kann kein Top-Level-Array -> manuell wrappen:
-                string wrapped = "{\"items\":" + raw + "}";
-                InventoryListDto parsed = JsonUtility.FromJson<InventoryListDto>(wrapped);
-
-                return parsed?.items ?? Array.Empty<InventoryItemDto>();
+                // 204 No Content oder leerer Body -> leeres Inventar zurückgeben
+                var code = (int)req.responseCode;
+                var raw = req.downloadHandler?.text;
+                if (code == 204 || string.IsNullOrWhiteSpace(raw))
+                    return Array.Empty<InventoryItemDto>();
+                
+                // JsonUtility kann kein Top-Level-Array -> kleinen Wrapper nutzen:
+                var wrapped = "{\"items\":" + raw + "}";
+                
+                try
+                {
+                    var container = JsonUtility.FromJson<InventoryContainer>(wrapped);
+                    return container.items ?? Array.Empty<InventoryItemDto>();
+                }
+                catch (Exception jex)
+                {
+                    // Diagnose: ersten Teil des Bodys loggen
+                        var preview = raw.Length > 300 ? raw.Substring(0, 300) + "…" : raw;
+                    throw new Exception($"Inventory JSON parse failed: {jex.Message}. BodyPreview={preview}");
+                }
             }
         }
         
@@ -192,7 +216,7 @@ namespace GpsGame.Net
             };
             req.SetRequestHeader("Content-Type", "application/json");
             req.SetRequestHeader("Accept", "application/json");
-            req.chunkedTransfer = false;                 // vermeidet Chunking-Resets
+            //req.chunkedTransfer = false;                 // vermeidet Chunking-Resets
             req.SetRequestHeader("Connection", "close"); // schließt Verbindung hart (hilft gegen Curl 56)
             AddCommonHeaders(req);
 
@@ -238,9 +262,9 @@ namespace GpsGame.Net
         {
             var tcs = new TaskCompletionSource<UnityWebRequest>();
             
-            #if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             req.certificateHandler = new DevCertBypass();
-            #endif
+#endif
             
             var op = req.SendWebRequest();
             op.completed += _ => tcs.TrySetResult(req);

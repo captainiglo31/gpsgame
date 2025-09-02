@@ -43,6 +43,8 @@ namespace GpsGame.Infrastructure.Persistence.Configurations
 
             // index on coordinates for bounding box queries
             builder.HasIndex(r => new { r.Latitude, r.Longitude });
+            builder.HasIndex(x => x.RespawnAtUtc);
+            builder.HasIndex(x => new { x.Amount, x.RespawnAtUtc });
         }
     }
 }

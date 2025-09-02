@@ -27,6 +27,8 @@ namespace GpsGame.Infrastructure.Resources
             double maxLng,
             CancellationToken ct)
         {
+            
+            
             return await _db.ResourceNodes
                 .AsNoTracking()
                 .Where(r => r.Latitude >= minLat && r.Latitude <= maxLat

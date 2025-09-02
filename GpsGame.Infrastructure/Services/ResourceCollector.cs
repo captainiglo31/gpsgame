@@ -51,7 +51,7 @@ public sealed class ResourceCollector : IResourceCollector
         }
 
         var nowUtc = DateTime.UtcNow;
-
+        
         var node = await _db.ResourceNodes
             .AsNoTracking()
             .Where(n => n.Id == nodeId)

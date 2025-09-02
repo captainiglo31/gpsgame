@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using GpsGame.Application.DTOs;
 using GpsGame.Application.FeatureFlags;
 using GpsGame.Application.Inventory;
 using GpsGame.Application.Resources;
@@ -19,15 +20,17 @@ namespace GpsGame.Api.Controllers
         private readonly IResourceCollector _collector;
         private readonly AppDbContext _db;
         private readonly IInventoryService _inventory;
+        private readonly IResourceRespawnService _respawn;
         
 
-        public ResourcesController(IResourceQuery resourceQuery, IFeatureFlagReader flags, IResourceCollector collector,  AppDbContext db, IInventoryService inventory)
+        public ResourcesController(IResourceQuery resourceQuery, IFeatureFlagReader flags, IResourceCollector collector,  AppDbContext db, IInventoryService inventory, IResourceRespawnService respawn)
         {
             _resourceQuery = resourceQuery;
             _flags = flags;
             _collector = collector;
             _db = db;
             _inventory = inventory;
+            _respawn = respawn;
         }
 
         /// <summary>
@@ -64,7 +67,11 @@ namespace GpsGame.Api.Controllers
             {
                 return BadRequest("Minimum latitude/longitude must be less than maximum latitude/longitude.");
             }
+            
+            // 1) Lazy respawn in der abgefragten BBox
+            await _respawn.RespawnDueAsync(minLat, minLng, maxLat, maxLng, ct);
 
+            // 2) Danach frisch lesen
             var resources = await _resourceQuery.GetByBoundingBoxAsync(minLat, minLng, maxLat, maxLng, ct);
             return Ok(resources);
         }
@@ -87,7 +94,10 @@ namespace GpsGame.Api.Controllers
                 return BadRequest(ModelState);
 
             await using var tx = await _db.Database.BeginTransactionAsync(ct);
-
+            
+            // ★ Lazy-Respawn des EINEN Nodes innerhalb derselben Transaktion:
+            await _respawn.RespawnIfDueAsync(id, ct);
+            
             var result = await _collector.CollectAsync(id, request, ct);
 
             if (!result.Success)
@@ -117,6 +127,17 @@ namespace GpsGame.Api.Controllers
                     "already_collected"   => StatusCode(StatusCodes.Status409Conflict, errorPayload),
                     _                     => BadRequest(errorPayload)
                 };
+            }
+            else
+            {
+                var totals = await _inventory.GetAggregatedByPlayerAsync(request.PlayerId, ct);
+                result.Inventory = totals
+                    .Select(x => new InventoryItemDto
+                    {
+                        ResourceType = x.ResourceType, // oder x.Type – je nach deinem Rückgabemodell
+                        Amount = x.Amount
+                    })
+                    .ToList();
             }
 
             // WICHTIG: result muss PlayerId, ResourceType, Collected liefern (siehe unten).

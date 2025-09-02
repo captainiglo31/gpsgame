@@ -3,6 +3,8 @@ using GpsGame.Infrastructure.FeatureFlags;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using GpsGame.Application.Resources;
+using GpsGame.Infrastructure.Services;
 
 namespace GpsGame.Infrastructure;
 
@@ -19,8 +21,12 @@ public static class DependencyInjection
         // Feature flags (read-only)
         services.AddScoped<IFeatureFlagReader, FeatureFlagReader>();
             
-            // Resource query
-            services.AddScoped<GpsGame.Application.Resources.IResourceQuery, GpsGame.Infrastructure.Resources.ResourceQuery>();
+        // Resource query
+        services.AddScoped<GpsGame.Application.Resources.IResourceQuery, GpsGame.Infrastructure.Resources.ResourceQuery>();
+        
+        // Resources Respawner
+        services.AddScoped<IResourceRespawnService, ResourceRespawnService>();
+        
 
         return services;
     }
